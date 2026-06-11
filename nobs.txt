@@ -1,0 +1,202 @@
+unit zlib
+
+build: @BUILD_TARGETS
+{
+    NO_TOOL
+}
+
+generate_zconf: zconf_generator_tool
+{
+    GENERATE_ZCONF
+    ZCONF_TOOL = "generate"
+    GENERATOR = zconf_generator_tool.BINARY
+    SOURCE_ZCONF = P"(zconf.h)"
+    GENERATED_INCLUDE = P"(out/generated/${PROFILE})"
+    OUTPUT_ZCONF = P"(out/generated/${PROFILE}/zconf.h)"
+}
+
+zconf_generator_tool:
+{
+    C_FILES = P"(tools/gen_zconf.c)"
+    OUTPUT_NAME = "gen_zconf"
+
+    if OS_FAMILY = "windows"
+    {
+        OUTPUT_NAME = "gen_zconf.exe"
+    }
+}
+
+zlib_sources:
+{
+    NO_TOOL
+    ^C_FILES = [
+        P"(adler32.c)",
+        P"(compress.c)",
+        P"(crc32.c)",
+        P"(deflate.c)",
+        P"(gzclose.c)",
+        P"(gzlib.c)",
+        P"(gzread.c)",
+        P"(gzwrite.c)",
+        P"(infback.c)",
+        P"(inflate.c)",
+        P"(inftrees.c)",
+        P"(inffast.c)",
+        P"(trees.c)",
+        P"(uncompr.c)",
+        P"(zutil.c)"
+    ]
+}
+
+windows_shared: +windows_shared_core +windows_resource
+{
+    DLL
+    OBJS
+    DEF = P"(win32/zlib.def)"
+    OUTPUT_NAME = "libz.dll"
+}
+
+windows_static: +windows_static_core
+{
+    OBJS
+    STATIC
+    OUTPUT_NAME = "libzs.lib"
+}
+
+windows_shared_core: +zlib_sources generate_zconf
+{
+    C_FILES = []
+    C_FLAGS += ["/c"]
+    C_DEFINES += ["ZLIB_BUILD", "ZLIB_DLL"]
+    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
+}
+
+windows_static_core: +zlib_sources generate_zconf
+{
+    C_FILES = []
+    C_FLAGS += ["/c"]
+    C_DEFINES += ["ZLIB_BUILD"]
+    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
+}
+
+windows_resource_objects: windows_resource_compile
+{
+    NO_TOOL
+    ^OBJS = windows_resource_compile.RES
+}
+
+windows_resource: +windows_resource_objects
+{
+    NO_TOOL
+}
+
+windows_resource_compile:
+{
+    RC_FILE = P"(win32/zlib-cmake.rc)"
+    OUTPUT_NAME = "zlib.res"
+}
+
+windows_example: +windows_shared generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "zlib_example.exe"
+}
+
+windows_minigzip: +windows_shared generate_zconf
+{
+    C_FILES = P"(test/minigzip.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "minigzip.exe"
+}
+
+windows_examplestatic: +windows_static generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "zlib_examplestatic.exe"
+}
+
+windows_minigzipstatic: +windows_static generate_zconf
+{
+    C_FILES = P"(test/minigzip.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "minigzipstatic.exe"
+}
+
+unix_shared: +unix_shared_core
+{
+    SO
+    OBJS
+    OUTPUT_NAME = "libz.so"
+}
+
+unix_static: +unix_static_core
+{
+    OBJS
+    STATIC
+    OUTPUT_NAME = "libz.a"
+}
+
+unix_shared_core: +zlib_sources generate_zconf
+{
+    C_FILES = []
+    C_FLAGS += ["-c", "-fPIC"]
+    C_DEFINES += ["ZLIB_BUILD", "_LARGEFILE64_SOURCE=1"]
+    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
+}
+
+unix_static_core: +zlib_sources generate_zconf
+{
+    C_FILES = []
+    C_FLAGS += ["-c"]
+    C_DEFINES += ["ZLIB_BUILD", "_LARGEFILE64_SOURCE=1"]
+    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
+}
+
+unix_example: +unix_shared generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    LIB += [unix_shared.SO]
+    OUTPUT_NAME = "zlib_example"
+}
+
+unix_minigzip: +unix_shared generate_zconf
+{
+    C_FILES = P"(test/minigzip.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    LIB += [unix_shared.SO]
+    OUTPUT_NAME = "minigzip"
+}
+
+unix_examplestatic: +unix_static generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "zlib_examplestatic"
+}
+
+unix_minigzipstatic: +unix_static generate_zconf
+{
+    C_FILES = P"(test/minigzip.c)"
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "minigzipstatic"
+}
+
+unix_example64: +unix_shared generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    C_DEFINES += ["_FILE_OFFSET_BITS=64", "_LARGEFILE64_SOURCE=1"]
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    LIB += [unix_shared.SO]
+    OUTPUT_NAME = "zlib_example64"
+}
+
+unix_example64static: +unix_static generate_zconf
+{
+    C_FILES = P"(test/example.c)"
+    C_DEFINES += ["_FILE_OFFSET_BITS=64", "_LARGEFILE64_SOURCE=1"]
+    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
+    OUTPUT_NAME = "zlib_example64static"
+}

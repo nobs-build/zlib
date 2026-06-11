@@ -25,6 +25,8 @@
 /zlib.pc
 /configure.log
 /build
+/out
+/.nobs_cache
 
 .DS_Store
 .vs

@@ -19,6 +19,22 @@ well, "make install" should work for most flavors of Unix.  For Windows, use
 one of the special makefiles in win32/ or contrib/vstudio/ .  For VMS, use
 make_vms.com.
 
+Building with Nobs:
+
+Make sure that `nobs` is available in PATH.  If no compiler toolchain has been
+registered yet, run:
+
+    nobs --find-compilers
+
+Then build one of the available profiles from the repository root:
+
+    nobs build windows_release
+    nobs build windows_debug
+    nobs build unix_release
+    nobs build unix_debug
+
+Use `nobs -p` to list the profiles.  Build outputs are written under `out/`.
+
 Questions about zlib should be sent to <zlib@gzip.org>, or to Gilles Vollant
 <info@winimage.com> for the Windows DLL version.  The zlib home page is
 https://zlib.net/ .  Before reporting a problem, please check this site to
