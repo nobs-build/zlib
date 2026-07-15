@@ -67,6 +67,28 @@ profiles
         LINK_FLAGS += ["/INCREMENTAL:NO", "/OPT:REF"]
     }
 
+    windows_release_mt
+    {
+        TARGET_PLATFORM = "windows"
+        ARCH="x64"
+        BUILD_TARGETS = [
+            "windows_shared",
+            "windows_static",
+            "windows_example",
+            "windows_minigzip",
+            "windows_examplestatic",
+            "windows_minigzipstatic"
+        ]
+        MSVC
+        WINDOWS
+        C_FLAGS += ["/O2", "/MT", "/W3"]
+        C_DEFINES += [
+            "_CRT_SECURE_NO_DEPRECATE",
+            "_CRT_NONSTDC_NO_DEPRECATE"
+        ]
+        LINK_FLAGS += ["/INCREMENTAL:NO", "/OPT:REF"]
+    }
+
     windows_debug
     {
         TARGET_PLATFORM = "windows"
@@ -82,6 +104,28 @@ profiles
         MSVC
         WINDOWS
         C_FLAGS += ["/Od", "/Zi", "/MDd", "/W3"]
+        C_DEFINES += [
+            "_CRT_SECURE_NO_DEPRECATE",
+            "_CRT_NONSTDC_NO_DEPRECATE"
+        ]
+        LINK_FLAGS += ["/DEBUG", "/INCREMENTAL:NO"]
+    }
+
+    windows_debug_mt
+    {
+        TARGET_PLATFORM = "windows"
+        ARCH="x64"
+        BUILD_TARGETS = [
+            "windows_shared",
+            "windows_static",
+            "windows_example",
+            "windows_minigzip",
+            "windows_examplestatic",
+            "windows_minigzipstatic"
+        ]
+        MSVC
+        WINDOWS
+        C_FLAGS += ["/Od", "/Zi", "/MTd", "/W3"]
         C_DEFINES += [
             "_CRT_SECURE_NO_DEPRECATE",
             "_CRT_NONSTDC_NO_DEPRECATE"
