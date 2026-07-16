@@ -1,6 +1,6 @@
 unit zlib
 
-build: @BUILD_TARGETS
+build: shared static example minigzip examplestatic minigzipstatic @PLATFORM_BUILD_TARGETS
 {
     NO_TOOL
 }
@@ -18,12 +18,7 @@ generate_zconf: zconf_generator_tool
 zconf_generator_tool:
 {
     C_FILES = P"(tools/gen_zconf.c)"
-    OUTPUT_NAME = "gen_zconf"
-
-    if OS_FAMILY = "windows"
-    {
-        OUTPUT_NAME = "gen_zconf.exe"
-    }
+    OUTPUT_NAME = "gen_zconf${HOST_EXECUTABLE_EXTENSION}"
 }
 
 zlib_sources:
@@ -48,35 +43,48 @@ zlib_sources:
     ]
 }
 
-windows_shared: +windows_shared_core +windows_resource
+shared: generate_zconf +core(core_config) +@SHARED_EXTRAS
 {
-    DLL
+    SHARED
     OBJS
-    DEF = P"(win32/zlib.def)"
-    OUTPUT_NAME = "libz.dll"
+    LINK_FLAGS = []
+    LINK_FLAGS += SHARED_LINK_FLAGS
+    OUTPUT_NAME = "libz${SHARED_LIBRARY_EXTENSION}"
+    core_config =
+    {
+        SHARED_BUILD
+        C_FLAGS = SHARED_C_FLAGS
+        C_DEFINES = SHARED_C_DEFINES
+    }
 }
 
-windows_static: +windows_static_core
+static: generate_zconf +core(core_config)
 {
     OBJS
     STATIC
-    OUTPUT_NAME = "libzs.lib"
+    OUTPUT_NAME = "libz${STATIC_LIBRARY_EXTENSION}"
+    core_config =
+    {
+        C_FLAGS = []
+        C_DEFINES = []
+    }
 }
 
-windows_shared_core: +zlib_sources generate_zconf
+core(config): +zlib_sources
 {
     C_FILES = []
-    C_FLAGS += ["/c"]
-    C_DEFINES += ["ZLIB_BUILD", "ZLIB_DLL"]
-    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
-}
-
-windows_static_core: +zlib_sources generate_zconf
-{
-    C_FILES = []
-    C_FLAGS += ["/c"]
+    C_FLAGS = []
+    C_FLAGS += [C_COMPILE_FLAG]
+    C_FLAGS += config.C_FLAGS
     C_DEFINES += ["ZLIB_BUILD"]
-    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
+    C_DEFINES += PLATFORM_C_DEFINES
+    C_DEFINES += config.C_DEFINES
+    INCLUDE = [P"(out/generated/${PROFILE})", P"(.)"]
+}
+
+windows_resource: +windows_resource_objects
+{
+    NO_TOOL
 }
 
 windows_resource_objects: windows_resource_compile
@@ -85,118 +93,55 @@ windows_resource_objects: windows_resource_compile
     ^OBJS = windows_resource_compile.RES
 }
 
-windows_resource: +windows_resource_objects
-{
-    NO_TOOL
-}
-
 windows_resource_compile:
 {
     RC_FILE = P"(win32/zlib-cmake.rc)"
     OUTPUT_NAME = "zlib.res"
 }
 
-windows_example: +windows_shared generate_zconf
+example: +shared
 {
     C_FILES = P"(test/example.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "zlib_example.exe"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    LIB += [shared[SHARED_LINK_OUTPUT]]
+    OUTPUT_NAME = "zlib_example${EXECUTABLE_EXTENSION}"
 }
 
-windows_minigzip: +windows_shared generate_zconf
+minigzip: +shared
 {
     C_FILES = P"(test/minigzip.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "minigzip.exe"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    LIB += [shared[SHARED_LINK_OUTPUT]]
+    OUTPUT_NAME = "minigzip${EXECUTABLE_EXTENSION}"
 }
 
-windows_examplestatic: +windows_static generate_zconf
+examplestatic: +static
 {
     C_FILES = P"(test/example.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "zlib_examplestatic.exe"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    OUTPUT_NAME = "zlib_examplestatic${EXECUTABLE_EXTENSION}"
 }
 
-windows_minigzipstatic: +windows_static generate_zconf
+minigzipstatic: +static
 {
     C_FILES = P"(test/minigzip.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "minigzipstatic.exe"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    OUTPUT_NAME = "minigzipstatic${EXECUTABLE_EXTENSION}"
 }
 
-unix_shared: +unix_shared_core
-{
-    SO
-    OBJS
-    OUTPUT_NAME = "libz.so"
-}
-
-unix_static: +unix_static_core
-{
-    OBJS
-    STATIC
-    OUTPUT_NAME = "libz.a"
-}
-
-unix_shared_core: +zlib_sources generate_zconf
-{
-    C_FILES = []
-    C_FLAGS += ["-c", "-fPIC"]
-    C_DEFINES += ["ZLIB_BUILD", "_LARGEFILE64_SOURCE=1"]
-    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
-}
-
-unix_static_core: +zlib_sources generate_zconf
-{
-    C_FILES = []
-    C_FLAGS += ["-c"]
-    C_DEFINES += ["ZLIB_BUILD", "_LARGEFILE64_SOURCE=1"]
-    INCLUDE = [generate_zconf.INCLUDE, P"(.)"]
-}
-
-unix_example: +unix_shared generate_zconf
-{
-    C_FILES = P"(test/example.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    LIB += [unix_shared.SO]
-    OUTPUT_NAME = "zlib_example"
-}
-
-unix_minigzip: +unix_shared generate_zconf
-{
-    C_FILES = P"(test/minigzip.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    LIB += [unix_shared.SO]
-    OUTPUT_NAME = "minigzip"
-}
-
-unix_examplestatic: +unix_static generate_zconf
-{
-    C_FILES = P"(test/example.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "zlib_examplestatic"
-}
-
-unix_minigzipstatic: +unix_static generate_zconf
-{
-    C_FILES = P"(test/minigzip.c)"
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "minigzipstatic"
-}
-
-unix_example64: +unix_shared generate_zconf
+example64: +shared
 {
     C_FILES = P"(test/example.c)"
     C_DEFINES += ["_FILE_OFFSET_BITS=64", "_LARGEFILE64_SOURCE=1"]
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    LIB += [unix_shared.SO]
-    OUTPUT_NAME = "zlib_example64"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    LIB += [shared[SHARED_LINK_OUTPUT]]
+    OUTPUT_NAME = "zlib_example64${EXECUTABLE_EXTENSION}"
 }
 
-unix_example64static: +unix_static generate_zconf
+example64static: +static
 {
     C_FILES = P"(test/example.c)"
     C_DEFINES += ["_FILE_OFFSET_BITS=64", "_LARGEFILE64_SOURCE=1"]
-    INCLUDE = [P"(.)", generate_zconf.INCLUDE]
-    OUTPUT_NAME = "zlib_example64static"
+    INCLUDE = [P"(.)", P"(out/generated/${PROFILE})"]
+    OUTPUT_NAME = "zlib_example64static${EXECUTABLE_EXTENSION}"
 }

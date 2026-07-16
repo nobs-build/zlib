@@ -45,18 +45,54 @@ units
 
 profiles
 {
+    default
+    {
+        PLATFORM_BUILD_TARGETS = []
+        HOST_EXECUTABLE_EXTENSION = ""
+        EXECUTABLE_EXTENSION = ""
+        SHARED_LIBRARY_EXTENSION = ""
+        STATIC_LIBRARY_EXTENSION = ""
+        SHARED_LINK_OUTPUT = ""
+        C_COMPILE_FLAG = ""
+        PLATFORM_C_DEFINES = []
+        SHARED_C_FLAGS = []
+        SHARED_C_DEFINES = []
+        SHARED_LINK_FLAGS = []
+        SHARED_EXTRAS = []
+
+        if OS_FAMILY = "windows"
+        {
+            HOST_EXECUTABLE_EXTENSION = ".exe"
+        }
+
+        if TARGET_PLATFORM = "windows"
+        {
+            EXECUTABLE_EXTENSION = ".exe"
+            SHARED_LIBRARY_EXTENSION = ".dll"
+            STATIC_LIBRARY_EXTENSION = "s.lib"
+            SHARED_LINK_OUTPUT = "LIB"
+            C_COMPILE_FLAG = "/c"
+            SHARED_C_DEFINES = ["ZLIB_DLL"]
+            SHARED_LINK_FLAGS = ["/DLL", "/DEF:${project_root}/win32/zlib.def"]
+            SHARED_EXTRAS = ["windows_resource"]
+        }
+
+        if TARGET_PLATFORM = "unix"
+        {
+            PLATFORM_BUILD_TARGETS = ["example64", "example64static"]
+            SHARED_LIBRARY_EXTENSION = ".so"
+            STATIC_LIBRARY_EXTENSION = ".a"
+            SHARED_LINK_OUTPUT = "SO"
+            C_COMPILE_FLAG = "-c"
+            PLATFORM_C_DEFINES = ["_LARGEFILE64_SOURCE=1"]
+            SHARED_C_FLAGS = ["-fPIC"]
+        }
+    }
+
     windows_release
     {
         TARGET_PLATFORM = "windows"
         ARCH="x64"
-        BUILD_TARGETS = [
-            "windows_shared",
-            "windows_static",
-            "windows_example",
-            "windows_minigzip",
-            "windows_examplestatic",
-            "windows_minigzipstatic"
-        ]
         MSVC
         WINDOWS
         C_FLAGS += ["/O2", "/MD", "/W3"]
@@ -71,14 +107,6 @@ profiles
     {
         TARGET_PLATFORM = "windows"
         ARCH="x64"
-        BUILD_TARGETS = [
-            "windows_shared",
-            "windows_static",
-            "windows_example",
-            "windows_minigzip",
-            "windows_examplestatic",
-            "windows_minigzipstatic"
-        ]
         MSVC
         WINDOWS
         C_FLAGS += ["/O2", "/MT", "/W3"]
@@ -93,14 +121,6 @@ profiles
     {
         TARGET_PLATFORM = "windows"
         ARCH="x64"
-        BUILD_TARGETS = [
-            "windows_shared",
-            "windows_static",
-            "windows_example",
-            "windows_minigzip",
-            "windows_examplestatic",
-            "windows_minigzipstatic"
-        ]
         MSVC
         WINDOWS
         C_FLAGS += ["/Od", "/Zi", "/MDd", "/W3"]
@@ -115,14 +135,6 @@ profiles
     {
         TARGET_PLATFORM = "windows"
         ARCH="x64"
-        BUILD_TARGETS = [
-            "windows_shared",
-            "windows_static",
-            "windows_example",
-            "windows_minigzip",
-            "windows_examplestatic",
-            "windows_minigzipstatic"
-        ]
         MSVC
         WINDOWS
         C_FLAGS += ["/Od", "/Zi", "/MTd", "/W3"]
@@ -137,16 +149,6 @@ profiles
     {
         TARGET_PLATFORM = "unix"
         ARCH="x86_64"
-        BUILD_TARGETS = [
-            "unix_shared",
-            "unix_static",
-            "unix_example",
-            "unix_minigzip",
-            "unix_examplestatic",
-            "unix_minigzipstatic",
-            "unix_example64",
-            "unix_example64static"
-        ]
         GNU
         os = "linux"
         C_FLAGS += ["-O3", "-Wall"]
@@ -156,16 +158,6 @@ profiles
     {
         TARGET_PLATFORM = "unix"
         ARCH="x86_64"
-        BUILD_TARGETS = [
-            "unix_shared",
-            "unix_static",
-            "unix_example",
-            "unix_minigzip",
-            "unix_examplestatic",
-            "unix_minigzipstatic",
-            "unix_example64",
-            "unix_example64static"
-        ]
         GNU
         os = "linux"
         C_FLAGS += ["-O0", "-g", "-Wall"]
